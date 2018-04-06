@@ -50,9 +50,14 @@ LOCAL_C_INCLUDES += \
 	$(call include-path-for, audio-route) \
 	$(call include-path-for, audio-effects)
 
+
 LOCAL_CFLAGS := -Werror -Wall
 #LOCAL_CFLAGS += -DPREPROCESSING_ENABLED
 #LOCAL_CFLAGS += -DHW_AEC_LOOPBACK
+
+ifeq ($(SUPPORTS_AMPLIFIER),true)
+LOCAL_CFLAGS += -DSUPPORTS_AMPLIFIER
+endif
 
 LOCAL_MODULE := audio.primary.$(TARGET_BOOTLOADER_BOARD_NAME)
 
