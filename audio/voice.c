@@ -73,10 +73,9 @@ struct pcm_config pcm_config_voice_sco = {
     .format = PCM_FORMAT_S16_LE,
 };
 
-/* SCO WB and NB uses 8kHz for now, 16kHz it's on TO DO*/
 struct pcm_config pcm_config_voice_sco_wb = {
     .channels = 1,
-    .rate = SCO_DEFAULT_SAMPLING_RATE,
+    .rate = SCO_WB_SAMPLING_RATE,
     .period_size = SCO_PERIOD_SIZE,
     .period_count = SCO_PERIOD_COUNT,
     .format = PCM_FORMAT_S16_LE,
@@ -88,6 +87,7 @@ int stop_voice_call(struct audio_device *adev);
 
 void set_voice_session_audio_path(struct voice_session *session)
 {
+    struct voice_data *vdata = container_of(session, struct voice_data, session);
     enum _AudioPath device_type;
     int rc;
 
@@ -107,7 +107,11 @@ void set_voice_session_audio_path(struct voice_session *session)
         case AUDIO_DEVICE_OUT_BLUETOOTH_SCO:
         case AUDIO_DEVICE_OUT_BLUETOOTH_SCO_HEADSET:
         case AUDIO_DEVICE_OUT_BLUETOOTH_SCO_CARKIT:
-            device_type = SOUND_AUDIO_PATH_BLUETOOTH;
+            if (vdata->bluetooth_wb) {
+                device_type = SOUND_AUDIO_PATH_BLUETOOTH_WB;
+            } else {
+                device_type = SOUND_AUDIO_PATH_BLUETOOTH;
+            }
             break;
         default:
             /* if output device isn't supported, use earpiece by default */
@@ -171,7 +175,6 @@ static void stop_voice_session_bt_sco(struct voice_session *session) {
 void start_voice_session_bt_sco(struct voice_session *session)
 {
     struct pcm_config *voice_sco_config;
-    struct voice_data *vdata = container_of(session, struct voice_data, session);
 
     if (session->pcm_sco_rx != NULL || session->pcm_sco_tx != NULL) {
         ALOGW("%s: SCO PCMs already open!\n", __func__);
@@ -180,7 +183,7 @@ void start_voice_session_bt_sco(struct voice_session *session)
 
     ALOGV("%s: Opening SCO PCMs", __func__);
 
-    if (vdata->bluetooth_wb) {
+    if (voice_session_uses_wideband(session)) {
         ALOGV("%s: pcm_config wideband", __func__);
         voice_sco_config = &pcm_config_voice_sco_wb;
     } else {
@@ -236,7 +239,7 @@ int start_voice_session(struct voice_session *session)
     ALOGV("%s: Opening voice PCMs", __func__);
 
     /* TODO: Handle wb_amr=2 */
-    if (session->wb_amr_type >= 1) {
+    if (voice_session_uses_wideband(session)) {
         ALOGV("%s: pcm_config wideband", __func__);
         voice_config = &pcm_config_voicecall_wideband;
     } else {

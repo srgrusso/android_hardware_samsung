@@ -7,7 +7,7 @@
  */
 
 #define LOG_TAG "RILClient"
-/*#define LOG_NDEBUG 0*/
+#define LOG_NDEBUG 0
 
 #include <binder/Parcel.h>
 #include <telephony/ril.h>
@@ -196,32 +196,42 @@ int RegisterUnsolicitedHandler(HRilClient client, uint32_t id, RilOnUnsolicited 
     for (i = 0; i < REQ_POOL_SIZE; i++) {
         // Check if  there is matched handler.
         if (id == client_prv->unsol_handlers[i].id) {
+            RLOGI("%s: unsolId(%d), match_slot(%d)", __FUNCTION__, id, i);
             match_slot = i;
         }
         // Find first empty handler slot.
         if (first_empty_slot == -1 && client_prv->unsol_handlers[i].id == 0) {
+            RLOGI("%s: unsolId(%d), first_empty_slot(%d)", __FUNCTION__, id, i);
             first_empty_slot = i;
         }
     }
 
     if (handler == NULL) {  // Unregister.
+        RLOGI("%s: unsolId(%d), handler(NULL)", __FUNCTION__, id);
         if (match_slot >= 0) {
+            RLOGI("%s: unsolId(%d), cleaing handler at match_slot(%d)", __FUNCTION__, id, match_slot);
             memset(&(client_prv->unsol_handlers[match_slot]), 0, sizeof(UnsolHandler));
             return RIL_CLIENT_ERR_SUCCESS;
         }
         else {
+            RLOGI("%s: unsolId(%d), invalid match_slot(%d)", __FUNCTION__, id, match_slot);
             return RIL_CLIENT_ERR_SUCCESS;
         }
     }
     else {// Register.
+        RLOGI("%s: unsolId(%d), handler(%p)", __FUNCTION__, id, handler);
         if (match_slot >= 0) {
+            RLOGI("%s: unsolId(%d), updating handler(%p) at match_slot(%d)", __FUNCTION__, id, handler, match_slot);
             client_prv->unsol_handlers[match_slot].handler = handler;   // Just update.
         }
         else if (first_empty_slot >= 0) {
+            RLOGI("%s: unsolId(%d), inserting handler(%p) at first_empty_slot(%d)",
+                __FUNCTION__, id, handler, first_empty_slot);
             client_prv->unsol_handlers[first_empty_slot].id = id;
             client_prv->unsol_handlers[first_empty_slot].handler = handler;
         }
         else {
+            RLOGI("%s: unsolId(%d), invalid first_empty_slot(%d)", __FUNCTION__, id, first_empty_slot);
             return RIL_CLIENT_ERR_RESOURCE;
         }
     }
@@ -254,32 +264,42 @@ int RegisterRequestCompleteHandler(HRilClient client, uint32_t id, RilOnComplete
     for (i = 0; i < REQ_POOL_SIZE; i++) {
         // Check if  there is matched handler.
         if (id == client_prv->req_handlers[i].id) {
+            RLOGI("%s: unsolId(%d), match_slot(%d)", __FUNCTION__, id, i);
             match_slot = i;
         }
         // Find first empty handler slot.
         if (first_empty_slot == -1 && client_prv->req_handlers[i].id == 0) {
+            RLOGI("%s: unsolId(%d), first_empty_slot(%d)", __FUNCTION__, id, i);
             first_empty_slot = i;
         }
     }
 
     if (handler == NULL) {  // Unregister.
+        RLOGI("%s: unsolId(%d), handler(NULL)", __FUNCTION__, id);
         if (match_slot >= 0) {
+            RLOGI("%s: unsolId(%d), cleaing handler at match_slot(%d)", __FUNCTION__, id, match_slot);
             memset(&(client_prv->req_handlers[match_slot]), 0, sizeof(ReqRespHandler));
             return RIL_CLIENT_ERR_SUCCESS;
         }
         else {
+            RLOGI("%s: unsolId(%d), invalid match_slot(%d)", __FUNCTION__, id, match_slot);
             return RIL_CLIENT_ERR_SUCCESS;
         }
     }
     else {  // Register.
+        RLOGI("%s: unsolId(%d), handler(%p)", __FUNCTION__, id, handler);
         if (match_slot >= 0) {
+            RLOGI("%s: unsolId(%d), updating handler(%p) at match_slot(%d)", __FUNCTION__, id, handler, match_slot);
             client_prv->req_handlers[match_slot].handler = handler; // Just update.
         }
         else if (first_empty_slot >= 0) {
+            RLOGI("%s: unsolId(%d), inserting handler(%p) at first_empty_slot(%d)",
+                __FUNCTION__, id, handler, first_empty_slot);
             client_prv->req_handlers[first_empty_slot].id = id;
             client_prv->req_handlers[first_empty_slot].handler = handler;
         }
         else {
+            RLOGI("%s: unsolId(%d), invalid first_empty_slot(%d)", __FUNCTION__, id, first_empty_slot);
             return RIL_CLIENT_ERR_RESOURCE;
         }
     }
@@ -1118,22 +1138,17 @@ static int SendOemRequestHookRaw(HRilClient client, int req_id, char *data, size
 
     ret = blockingWrite(client_prv->sock, (void *)&header, sizeof(header));
     if (ret < 0) {
-        RLOGE("%s: send request header failed. (%d)", __FUNCTION__, ret);
+        RLOGE("%s: send request header (req_id = %d) failed. (%d)", __FUNCTION__,
+                req_id, ret);
         goto error;
     }
 
     // Do TX: response data.
     ret = blockingWrite(client_prv->sock, p.data(), p.dataSize());
     if (ret < 0) {
-        RLOGE("%s: send request data failed. (%d)", __FUNCTION__, ret);
+        RLOGE("%s: send request data (req_id = %d) failed. (%d)", __FUNCTION__,
+                req_id, ret);
         goto error;
-    }
-
-    // check if the handler for specified event is NULL and deregister token
-    // to prevent token pool overflow
-    if(!FindReqHandler(client_prv, token, &check_req_id)) {
-        FreeToken(&(client_prv->token_pool), token);
-        ClearReqHistory(client_prv, token);
     }
 
     return RIL_CLIENT_ERR_SUCCESS;
@@ -1151,16 +1166,13 @@ error:
     return RIL_CLIENT_ERR_UNKNOWN;
 }
 
-
 static bool isValidSoundType(SoundType type) {
     return (type >= SOUND_TYPE_VOICE && type <= SOUND_TYPE_BTVOICE);
 }
 
-
 static bool isValidAudioPath(AudioPath path) {
-    return (path >= SOUND_AUDIO_PATH_EARPIECE && path <= OEM_SND_AUDIO_PATH_BT_WB_NSEC_OFF);
+    return (path >= SOUND_AUDIO_PATH_EARPIECE && path <= SOUND_AUDIO_PATH_BLUETOOTH_WB_NO_NR);
 }
-
 
 static bool isValidSoundClockCondition(SoundClockCondition condition) {
     return (condition >= SOUND_CLOCK_STOP && condition <= SOUND_CLOCK_START);
@@ -1177,7 +1189,6 @@ static bool isValidMuteCondition(MuteCondition condition) {
 static bool isValidTwoMicCtrl(TwoMicSolDevice device, TwoMicSolReport report) {
     return (device >= AUDIENCE && device <= FORTEMEDIA && report >= TWO_MIC_SOLUTION_OFF && report <= TWO_MIC_SOLUTION_ON  );
 }
-
 
 static char ConvertSoundType(SoundType type) {
     switch (type) {
@@ -1240,7 +1251,7 @@ static void * RxReaderFunc(void *param) {
 
     maxfd = max(client_prv->sock, client_prv->pipefd[0]) + 1;
 
-    printf("[*] %s() b_connect=%d, maxfd=%d\n", __FUNCTION__, client_prv->b_connect, maxfd);
+    RLOGV("[*] %s() b_connect=%d, maxfd=%d\n", __FUNCTION__, client_prv->b_connect, maxfd);
     while (client_prv->b_connect) {
         FD_ZERO(&(client_prv->sock_rfds));
 
@@ -1255,9 +1266,11 @@ static void * RxReaderFunc(void *param) {
                     // loop until EAGAIN/EINTR, end of stream, or other error
                     ret = record_stream_get_next(client_prv->p_rs, &p_record, &recordlen);
                     if (ret == 0 && p_record == NULL) { // end-of-stream
+                        RLOGV("[*] %s() EOS\n", __FUNCTION__);
                         break;
                     }
                     else if (ret < 0) {
+                        RLOGV("[*] %s() negative return (%d)\n", __FUNCTION__, ret);
                         break;
                     }
                     else if (ret == 0) {    // && p_record != NULL
@@ -1267,7 +1280,7 @@ static void * RxReaderFunc(void *param) {
                         }
                     }
                     else {
-                        printf("[*] %s()\n", __FUNCTION__);
+                        RLOGV("[*] %s()\n", __FUNCTION__);
                     }
                 }
 
@@ -1498,6 +1511,8 @@ static void FreeToken(uint32_t *token_pool, uint32_t token) {
 
 
 static uint8_t IsValidToken(uint32_t *token_pool, uint32_t token) {
+    RLOGV("[*] %s(): token(%d), token_pool(0x%x)\n", __FUNCTION__, token, *token_pool);
+
     if (token == 0)
         return 0;
 
