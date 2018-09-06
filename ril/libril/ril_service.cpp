@@ -68,14 +68,12 @@ struct OemHookImpl;
 #if (SIM_COUNT >= 2)
 sp<RadioImpl> radioService[SIM_COUNT];
 sp<OemHookImpl> oemHookService[SIM_COUNT];
-int64_t nitzTimeReceived[SIM_COUNT];
 // counter used for synchronization. It is incremented every time response callbacks are updated.
 volatile int32_t mCounterRadio[SIM_COUNT];
 volatile int32_t mCounterOemHook[SIM_COUNT];
 #else
 sp<RadioImpl> radioService[1];
 sp<OemHookImpl> oemHookService[1];
-int64_t nitzTimeReceived[1];
 // counter used for synchronization. It is incremented every time response callbacks are updated.
 volatile int32_t mCounterRadio[1];
 volatile int32_t mCounterOemHook[1];
@@ -6677,6 +6675,7 @@ int radio::nitzTimeReceivedInd(int slotId,
             return 0;
         }
         hidl_string nitzTime;
+        int64_t timeReceived = android::elapsedRealtime();
         char *resp = strndup((char *) response, responseLen);
         char *tmp = resp;
 
@@ -6696,11 +6695,10 @@ int radio::nitzTimeReceivedInd(int slotId,
         memsetAndFreeStrings(1, resp);
 #if VDBG
         RLOGD("nitzTimeReceivedInd: nitzTime %s receivedTime %" PRId64, nitzTime.c_str(),
-                nitzTimeReceived[slotId]);
+                timeReceived);
 #endif
         Return<void> retStatus = radioService[slotId]->mRadioIndication->nitzTimeReceived(
-                convertIntToRadioIndicationType(indicationType), nitzTime,
-                nitzTimeReceived[slotId]);
+                convertIntToRadioIndicationType(indicationType), nitzTime, timeReceived);
         radioService[slotId]->checkReturnStatus(retStatus);
     } else {
         RLOGE("nitzTimeReceivedInd: radioService[%d]->mRadioIndication == NULL", slotId);
@@ -8500,9 +8498,4 @@ pthread_rwlock_t * radio::getRadioServiceRwlock(int slotId) {
     #endif
 
     return radioServiceRwlockPtr;
-}
-
-// should acquire write lock for the corresponding service before calling this
-void radio::setNitzTimeReceived(int slotId, long timeReceived) {
-    nitzTimeReceived[slotId] = timeReceived;
 }

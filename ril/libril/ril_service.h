@@ -711,8 +711,6 @@ int sendRequestStringsResponse(int slotId,
 
 pthread_rwlock_t * getRadioServiceRwlock(int slotId);
 
-void setNitzTimeReceived(int slotId, long timeReceived);
-
 }   // namespace radio
 
 #endif  // RIL_SERVICE_H
