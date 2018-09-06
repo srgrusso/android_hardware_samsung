@@ -6699,7 +6699,7 @@ int radio::nitzTimeReceivedInd(int slotId,
         }
 
         nitzTime = convertCharPtrToHidlString(resp);
-        memsetAndFreeStrings(1, resp);
+        free(resp);
 #if VDBG
         RLOGD("nitzTimeReceivedInd: nitzTime %s receivedTime %" PRId64, nitzTime.c_str(),
                 timeReceived);
