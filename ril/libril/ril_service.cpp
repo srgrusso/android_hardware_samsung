@@ -1940,6 +1940,10 @@ Return<void> RadioImpl::setInitialAttachApn(int32_t serial, const DataProfileInf
         }
 #endif
 
+#ifdef NEEDS_IMS_TYPE_FIELD
+        iaa.imsType = 0;
+#endif
+
         CALL_ONREQUEST(RIL_REQUEST_SET_INITIAL_ATTACH_APN, &iaa, sizeof(iaa), pRI, mSlotId);
 
 #ifdef NEEDS_ROAMING_PROTOCOL_FIELD
