@@ -62,6 +62,8 @@ ifneq ($(DISABLE_RILD_OEM_HOOK),)
     LOCAL_CFLAGS += -DOEM_HOOK_DISABLED
 endif
 
+LOCAL_CFLAGS += -Wno-error
+
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/include
 LOCAL_C_INCLUDES += external/nanopb-c
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/../include
