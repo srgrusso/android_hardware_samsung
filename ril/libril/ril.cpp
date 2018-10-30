@@ -129,19 +129,16 @@ static RequestInfo *s_pendingRequests = NULL;
 
 #if (SIM_COUNT >= 2)
 static pthread_mutex_t s_pendingRequestsMutex_socket2  = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t s_writeMutex_socket2            = PTHREAD_MUTEX_INITIALIZER;
 static RequestInfo *s_pendingRequests_socket2          = NULL;
 #endif
 
 #if (SIM_COUNT >= 3)
 static pthread_mutex_t s_pendingRequestsMutex_socket3  = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t s_writeMutex_socket3            = PTHREAD_MUTEX_INITIALIZER;
 static RequestInfo *s_pendingRequests_socket3          = NULL;
 #endif
 
 #if (SIM_COUNT >= 4)
 static pthread_mutex_t s_pendingRequestsMutex_socket4  = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t s_writeMutex_socket4            = PTHREAD_MUTEX_INITIALIZER;
 static RequestInfo *s_pendingRequests_socket4          = NULL;
 #endif
 
