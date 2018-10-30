@@ -177,7 +177,6 @@ static void cpu_interactive_write(const char *param, char s[CLUSTER_COUNT][PARAM
     }
 }
 
-/* - not used in the moment
 static void send_boost(int boost_fd, int32_t duration_us)
 {
     int len;
@@ -195,7 +194,6 @@ static void send_boost(int boost_fd, int32_t duration_us)
     usleep(duration_us);
     len = write(boost_fd, "0", 1);
 }
-*/
 
 static void send_boostpulse(int boostpulse_fd)
 {
@@ -484,7 +482,7 @@ static void samsung_power_hint(struct power_module *module,
 
     /* Bail out if low-power mode is active */
     if (current_power_profile == PROFILE_POWER_SAVE && hint != POWER_HINT_LOW_POWER
-            && hint != POWER_HINT_DISABLE_TOUCH) {
+            && hint != POWER_HINT_SET_PROFILE && hint != POWER_HINT_DISABLE_TOUCH) {
         ALOGV("%s: PROFILE_POWER_SAVE active, ignoring hint %d", __func__, hint);
         return;
     }
@@ -504,6 +502,16 @@ static void samsung_power_hint(struct power_module *module,
         case POWER_HINT_LAUNCH:
             ALOGV("%s: POWER_HINT_LAUNCH", __func__);
             send_boostpulse(samsung_pwr->boostpulse_fd);
+            break;
+        case POWER_HINT_CPU_BOOST:
+            ALOGV("%s: POWER_HINT_CPU_BOOST", __func__);
+            int32_t duration_us = *((int32_t *)data);
+            send_boost(samsung_pwr->boost_fd, duration_us);
+            break;
+        case POWER_HINT_SET_PROFILE:
+            ALOGV("%s: POWER_HINT_SET_PROFILE", __func__);
+            int profile = *((intptr_t *)data);
+            set_power_profile(samsung_pwr, profile);
             break;
         case POWER_HINT_DISABLE_TOUCH:
             ALOGV("%s: POWER_HINT_DISABLE_TOUCH", __func__);
