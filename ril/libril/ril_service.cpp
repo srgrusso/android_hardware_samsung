@@ -3792,20 +3792,15 @@ SendSmsResult makeSendSmsResult(RadioResponseInfo& responseInfo, int serial, int
     populateResponseInfo(responseInfo, serial, responseType, e);
     SendSmsResult result = {};
 
-    if (response != NULL && responseLen == sizeof(RIL_SMS_Response)) {
+    if (response == NULL || responseLen != sizeof(RIL_SMS_Response)) {
+        RLOGE("Invalid response: NULL");
+        if (e == RIL_E_SUCCESS) responseInfo.error = RadioError::INVALID_RESPONSE;
+        result.ackPDU = hidl_string();
+    } else {
         RIL_SMS_Response *resp = (RIL_SMS_Response *) response;
         result.messageRef = resp->messageRef;
         result.ackPDU = convertCharPtrToHidlString(resp->ackPDU);
         result.errorCode = resp->errorCode;
-    } else if (response != NULL && responseLen == sizeof(RIL_SMS_Response_Ext)) {
-        RIL_SMS_Response *resp = &(((RIL_SMS_Response_Ext *) response)->response);
-        result.messageRef = resp->messageRef;
-        result.ackPDU = convertCharPtrToHidlString(resp->ackPDU);
-        result.errorCode = resp->errorCode;
-    } else {
-        RLOGE("Invalid response: NULL");
-        if (e == RIL_E_SUCCESS) responseInfo.error = RadioError::INVALID_RESPONSE;
-        result.ackPDU = hidl_string();
     }
     return result;
 }
