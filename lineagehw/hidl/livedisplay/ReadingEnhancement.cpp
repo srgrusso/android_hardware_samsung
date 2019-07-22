@@ -31,7 +31,7 @@ namespace livedisplay {
 namespace V2_0 {
 namespace samsung {
 
-static constexpr const char *kREPath = "/sys/class/mdnie/mdnie/accessibility";
+static constexpr const char* kREPath = "/sys/class/mdnie/mdnie/accessibility";
 
 // Methods from ::vendor::lineage::livedisplay::V2_0::ISunlightEnhancement follow.
 bool ReadingEnhancement::isSupported() {
@@ -47,13 +47,12 @@ Return<bool> ReadingEnhancement::isEnabled() {
         contents = Trim(contents);
     }
 
-    return !contents.compare("Current accessibility : DSI0 : GRAYSCALE ") || !contents.compare("4");
+    return !contents.compare("Current accessibility : DSI0 : GRAYSCALE") || !contents.compare("4");
 }
 
 Return<bool> ReadingEnhancement::setEnabled(bool enabled) {
     return WriteStringToFile(enabled ? "4" : "0", kREPath, true);
 }
-
 
 // Methods from ::android::hidl::base::V1_0::IBase follow.
 
