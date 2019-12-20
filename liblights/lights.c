@@ -44,7 +44,6 @@ enum component_mask_t {
     COMPONENT_BUTTON_LIGHT = 0x2,
     COMPONENT_LED = 0x4,
     COMPONENT_BLN = 0x8,
-    COMPONENT_DUMMY = 0x10,
 };
 
 enum light_t {
@@ -353,20 +352,12 @@ static int set_light_leds_attention(struct light_device_t *dev __unused,
     return set_light_leds(&fixed, TYPE_ATTENTION);
 }
 
-static int set_light_dummy(struct light_device_t *dev __unused,
-                                        struct light_state_t const *state __unused)
-{
-    return 0;
-}
-
 static int open_lights(const struct hw_module_t *module, char const *name,
                         struct hw_device_t **device)
 {
+    int requested_component;
     int (*set_light)(struct light_device_t *dev,
         struct light_state_t const *state);
-
-    int requested_component = COMPONENT_DUMMY;
-    set_light = set_light_dummy;
 
     check_component_support();
 
@@ -391,12 +382,14 @@ static int open_lights(const struct hw_module_t *module, char const *name,
     } else if (0 == strcmp(LIGHT_ID_ATTENTION, name)) {
         requested_component = COMPONENT_LED;
         set_light = set_light_leds_attention;
-    } else { // dummy
+    } else {
+        return -EINVAL;
     }
 
     if ((hw_components & requested_component) == 0) {
-        requested_component = COMPONENT_DUMMY;
-        set_light = set_light_dummy;
+        ALOGV("%s: component 0x%x not supported by device", __func__,
+            requested_component);
+        return -EINVAL;
     }
 
     int max_brightness = get_max_panel_brightness();
