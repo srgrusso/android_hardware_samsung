@@ -51,3 +51,5 @@ LOCAL_MODULE_OWNER := samsung
 LOCAL_VENDOR_MODULE := true
 
 include $(BUILD_EXECUTABLE)
+
+include $(call all-makefiles-under,$(LOCAL_PATH))
