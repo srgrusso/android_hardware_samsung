@@ -74,23 +74,24 @@ static T get(const std::string& path, const T& def) {
     }
 }
 
-FingerprintInscreen::FingerprintInscreen() {}
+FingerprintInscreen::FingerprintInscreen() {
+#ifdef FOD_SET_RECT
+    set(TSP_CMD_PATH, FOD_SET_RECT);
+#endif
+}
 
 Return<void> FingerprintInscreen::onStartEnroll() { return Void(); }
 
 Return<void> FingerprintInscreen::onFinishEnroll() { return Void(); }
 
-Return<void> FingerprintInscreen::onPress() {
+Return<void> FingerprintInscreen::onPress() { return Void(); }
+
+Return<void> FingerprintInscreen::onRelease() { return Void(); }
+
+Return<void> FingerprintInscreen::onShowFODView() {
     set(TSP_CMD_PATH, FOD_ENABLE);
     return Void();
 }
-
-Return<void> FingerprintInscreen::onRelease() {
-    set(TSP_CMD_PATH, FOD_DISABLE);
-    return Void();
-}
-
-Return<void> FingerprintInscreen::onShowFODView() { return Void(); }
 
 Return<void> FingerprintInscreen::onHideFODView() {
     set(TSP_CMD_PATH, FOD_DISABLE);
